@@ -1,4 +1,4 @@
-const {Config, createLog} = require('./utils');
+const {Config, createLog, saveConfig} = require('./utils');
 const Path = require('path');
 const Worker /* {parentPort, workerData, MessageChannel} */  = require('worker_threads');
 const ParseFS = require('./steps/parse-fs');
@@ -57,7 +57,15 @@ function jobSteps(folder) {
   });
 
 
+
+  parseFs.on('scanned', (ts) => {
+    SCOPE.lastScan = ts;
+    saveConfig();
+  });
+
   parseFs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
+
+
 
 }
 

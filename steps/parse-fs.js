@@ -18,7 +18,7 @@ class ParseFS extends Job {
   loopfile() {
 
     const rl = ReadLine.createInterface({
-      input: FS.createReadStream(  Path.join(Config.CWD, `${this.name}-fs.txt`)  ),
+      input: FS.createReadStream(  Path.join(Config.CWD, `${this.name}.txt`)  ),
       crlfDelay: Infinity
     });
 
@@ -35,7 +35,7 @@ class ParseFS extends Job {
 
   execute(basepath) {
 
-    if ( FS.existsSync( Path.join(Config.CWD, `${this.name}-fs.txt`) ) ) {
+    if ( FS.existsSync( Path.join(Config.CWD, `${this.name}.txt`) ) ) {
       this.Log.warn(`${this.JobName} !!!!!! PROCESSING IN FILE !!!!!!!`);
       return this.loopfile();
     }
@@ -62,8 +62,13 @@ class ParseFS extends Job {
       let fullpath = Path.join( basepath, file );
 
       let res = {title, year};
-      Object.assign(res, this.loopSubFolder( basepath, Path.relative(basepath, fullpath) ) );
+      let has_been_updated = this.loopSubFolder( res, basepath, Path.relative(basepath, fullpath) );
 
+
+      if ( ! has_been_updated ) {
+        this.Log.info(`${this.JobName} ${file} has not been updated - SKIP!`);
+        continue;
+      }
 
       this.writeFile(res);
 
@@ -71,11 +76,15 @@ class ParseFS extends Job {
 
     }
 
+    //this.emit('scanned', Date.now() );
+
     return Promise.resolve();
   }
 
 
-  loopSubFolder(basepath, folderpath) {
+  loopSubFolder(res, basepath, folderpath) {
+
+    let has_been_updated = false;
 
     let fullFolderPath = Path.join(basepath, folderpath);
 
@@ -89,14 +98,22 @@ class ParseFS extends Job {
       let stat = FS.statSync( fullpath );
 
       if ( stat.isDirectory() ) {
-        let subf = this.loopSubFolder( basepath, Path.relative(basepath, fullpath)  );
-        subf.name = content;
+        let subf = {name: content};
+
+        let _sub_folder_updated = this.loopSubFolder( subf, basepath, Path.relative(basepath, fullpath)  );
+
+        has_been_updated = has_been_updated || _sub_folder_updated;
+
         subfolders.push( subf );
 
       } else if ( stat.isFile() ) {
 
+        if ( stat.mtimeMs > this._scope.lastScan ) {
+          has_been_updated = true;
+        }
+
         let mime = Mime.getType(content);
-        if ( mime.startsWith('video') ) {
+        if ( mime.startsWith( this._scope.Mime ) ) {
           mediafiles.push({
             name: Path.basename(fullpath),
             file: Path.join('/', Path.relative( Path.join(basepath, '../'), fullpath ) ),
@@ -110,12 +127,14 @@ class ParseFS extends Job {
 
     this.Log.info( `${this.JobName} found ${mediafiles.length} mediafiles and ${subfolders.length} folders in ${folderpath}` );
 
-    return {mediafiles, subfolders};
+    res = Object.assign(res, {mediafiles, subfolders});
+
+    return has_been_updated;
   }
 
 
   writeFile(res) {
-    let fd = FS.openSync( Path.join(Config.CWD, `${this.name}-fs.txt`), 'a' );
+    let fd = FS.openSync( Path.join(Config.CWD, `${this.name}.txt`), 'a' );
     FS.writeSync(fd, JSON.stringify(res) + '\n' );
     FS.closeSync(fd);
   }

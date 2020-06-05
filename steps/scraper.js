@@ -45,7 +45,7 @@ class Scraper extends Job {
               if ( entries.length == 0 ) {
                 // scrape a new entry
                 ScraperLib[ scraper ].getInfo(first.id, type).then( (klass) => {
-                  this.emit( 'scraped', {scraped: klass, fs: data} );
+                  this.emit( 'scraped', {scraped: klass.toPage(), fs: data} );
                   return resolve();
                 })
               } else {

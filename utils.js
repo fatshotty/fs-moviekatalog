@@ -4,9 +4,6 @@ const FS = require('fs');
 
 const Winston = require('winston');
 
-
-
-
 function createLog(name) {
   let transports = [
     new Winston.transports.File({ filename: `logs/${name || 'process'}.log`  })
@@ -53,29 +50,61 @@ const Config = {
   PORT: process.env.PORT,
 
 
-  NUM_JOB: 1,
-
-  Folders: [
-    {
-      Scope: 'movies',
-      Path:  'movies',
-      Schedule: '0 0 0 * * *'
-    }
-    // 'tvshows': 'tvshows',
-    // 'documentaries-movies': 'documentaries',
-    // 'documentaries-series': 'documentaries'
-  ]
-
-
 };
 
-// if ( ! FS.existsSync(Config.DATADIR) ) {
-//   FS.mkdirSync(Config.DATADIR, {recursive: true});
-// }
+
+const PREFERENCE_FILE = Path.join(Config.CWD, 'preferences.json');
+let FOLDERS = [
+  // {
+  //   Mime: 'video',
+  //   Scope: 'movies',
+  //   Path:  'movies',
+  //   Schedule: '0 0 0 * * *',
+  //   lastScan: 0
+  // },
+  {
+    Mime: 'video',
+    Scope: 'tvshows',
+    Path:  'tvshows',
+    Schedule: '0 0 0 * * *',
+    lastScan: 0
+  }
+  // 'tvshows': 'tvshows',
+  // 'documentaries-movies': 'documentaries',
+  // 'documentaries-series': 'documentaries'
+];
+
+function saveConfig() {
+  FS.writeFileSync( PREFERENCE_FILE, JSON.stringify(FOLDERS, null, 2), 'utf-8' );
+}
+
+function loadConfig() {
+  if ( FS.existsSync(PREFERENCE_FILE) ) {
+    let data = FS.readFileSync( PREFERENCE_FILE, {encoding: 'utf-8'});
+    try {
+      FOLDERS = JSON.parse( data );
+    } catch( e ) {
+      console.warn(`Cannot load '${PREFERENCE_FILE}'`, e);
+    }
+  }
+}
+
+loadConfig();
+
+Config.Folders = FOLDERS;
 
 
+function extractRegExp(regexp, str, index) {
+  let matches = str.match(regexp);
+  if ( matches ) {
+    return matches.slice(index);
+  }
+  return null;
+}
 
 module.exports = {
   Config,
-  createLog
+  createLog,
+  extractRegExp,
+  saveConfig
 };

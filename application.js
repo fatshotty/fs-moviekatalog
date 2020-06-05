@@ -17,15 +17,16 @@ class JobWorker extends Job {
 
     Log.info(`new job for ${folder} at ${schedule}`);
 
-    this._job = new CronJob(
-      schedule,                           // schedule
-      this.execute.bind(this, folder),    // onTick
-      null,                               // onComplete
-      true,                               // start
-      'Europe/Amsterdam',                 // timeZone
-      null,                               // context
-      true                                // runOnInit -> execute now
-    );
+    // this._job = new CronJob(
+    //   schedule,                           // schedule
+    //   this.execute.bind(this, folder),    // onTick
+    //   null,                               // onComplete
+    //   true,                               // start
+    //   'Europe/Amsterdam',                 // timeZone
+    //   null,                               // context
+    //   true                                // runOnInit -> execute now
+    // );
+    this.execute(folder);
   }
 
 

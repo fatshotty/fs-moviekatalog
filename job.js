@@ -20,19 +20,18 @@ class Job extends EventEmitter {
   addToQueue(data) {
     this.queue.push(data);
     if ( this.FREE ) {
-      process.nextTick( () => {
-        for ( let i = 0; i < Config.NUM_JOB; i++ ) {
+      // process.nextTick( () => {
+        // for ( let i = 0; i < Config.NUM_JOB; i++ ) {
           this.next();
-        }
-      });
-      this.FREE = false;
+        // }
+      // });
+      // this.FREE = false;
     }
   }
 
   next() {
     let data = this.queue.shift();
     if ( !data ) {
-      // TODO: queue completed
       this.FREE = true;
       return;
     }

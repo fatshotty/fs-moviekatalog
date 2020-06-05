@@ -18,16 +18,17 @@ class UpdateEntry extends Job {
 
   execute({fs, entry}) {
 
-    this.Log.info(`${this.JobName} updating entry for ${fs.title} (${fs.year})`);
+    this.Log.info(`${this.JobName} check for update: ${fs.title} (${fs.year})`);
 
     let shouldUpdateMF = this.updateMediafilesFromFS({fs, entry});
 
 
     if ( !shouldUpdateMF ) {
-      this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) is already at latest version`);
+      this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) is already at latest version, SKIP`);
       return Promise.resolve();
     }
 
+    this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) - will be updated!`);
 
     return this.MovieKatalog.update( entry ).then( (createdEntry) => {
       this.Log.info(`${this.JobName} entry updated ${createdEntry.Title} (${createdEntry.Year}) - ${createdEntry.ID}`);
