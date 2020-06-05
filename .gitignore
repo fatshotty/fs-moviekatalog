@@ -1,0 +1,5 @@
+.env
+.vscode/
+logs/
+movies-fs-fs.txt
+node_modules/
