@@ -4,9 +4,20 @@ const FS = require('fs');
 
 const Winston = require('winston');
 
+
+const LOGGER = {};
+
 function createLog(name) {
+
+  name = name || 'process';
+
+  if ( name in LOGGER ) {
+    return LOGGER[ name ];
+  }
+
+
   let transports = [
-    new Winston.transports.File({ filename: `logs/${name || 'process'}.log`  })
+    new Winston.transports.File({ filename: `logs/${name}.log`  })
   ];
 
   transports.push( new Winston.transports.Console() );
@@ -15,14 +26,27 @@ function createLog(name) {
     level: 'info',
     transports: transports,
     format: Winston.format.combine(
-      Winston.format.timestamp({format:'DD-MM-YYYY HH:mm:ss.SSSS'}),
+      Winston.format.timestamp({format:'DD-MM-YYYY HH:mm:ss.SSSSS'}),
       Winston.format.simple(),
       Winston.format.printf((info) => {
         return `${info.timestamp} (${process.pid}) [${info.level.toUpperCase()}]  ${info.message}`+(info.splat!==undefined?`${info.splat}`:" ")
       })
     )
   });
-  return Log;
+
+
+  if ( name != 'process' ) {
+    let _old_warn = Log.warn;
+    let _old_error = Log.error;
+    Log.warn = function() {
+      LOGGER.process.warn.apply(LOGGER.process, arguments);
+    };
+    Log.error = function() {
+      LOGGER.process.error.apply(LOGGER.process, arguments);
+    };
+  }
+
+  return LOGGER[name] = Log;
 }
 
 

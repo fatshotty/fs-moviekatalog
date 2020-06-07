@@ -72,11 +72,11 @@ class ParseFS extends Job {
 
       this.writeFile(res);
 
-      // this.emit('folder', res);
+      this.emit('folder', res);
 
     }
 
-    //this.emit('scanned', Date.now() );
+    this.emit('scanned', Date.now() );
 
     return Promise.resolve();
   }

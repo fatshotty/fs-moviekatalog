@@ -12,7 +12,6 @@ const Log = createLog();
 
 
 function startProcess({folder}) {
-  // let JOB = `[Thread:${folder}]`;
 
   Log.info(`starting new thread for ${folder}`);
 
@@ -57,7 +56,6 @@ function jobSteps(folder) {
   });
 
 
-
   parseFs.on('scanned', (ts) => {
     SCOPE.lastScan = ts;
     saveConfig();
@@ -65,11 +63,7 @@ function jobSteps(folder) {
 
   parseFs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
 
-
-
 }
-
-
 
 
 

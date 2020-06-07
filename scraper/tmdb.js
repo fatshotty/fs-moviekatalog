@@ -50,7 +50,7 @@ function search(terms, year, type='movie') {
 
     return {results};
   }).catch( (e) => {
-    console.error(`[ERROR tmdb-search] ${e.message}`);
+    // console.error(`[ERROR tmdb-search] ${e.message}`);
     throw e;
   });
 }
@@ -70,7 +70,7 @@ function getInfo(id, type='movie') {
       }
     })
     .catch( (e) => {
-      console.error(`[ERROR tmdb-info] ${e.message}`);
+      // console.error(`[ERROR tmdb-info] ${e.message}`);
       throw e;
     });
 }

@@ -13,7 +13,7 @@ class JobWorker extends Job {
   constructor(name, folder, schedule) {
     super(name);
 
-    // this.spawnThread();
+    this.spawnThread();
 
     Log.info(`new job for ${folder} at ${schedule}`);
 
@@ -40,6 +40,10 @@ class JobWorker extends Job {
     this.Worker.on('message', (data) => {
       Log.info(`${this.JobName} Worker - received data ${data}`);
     });
+    this.Worker.on('error', (e) => {
+      Log.error(`${this.JobName} Worker - ERROR ${e.message}`);
+      console.error(`${this.JobName} Worker - ERROR ${e.message}`, e);
+    });
   }
 
 
@@ -49,7 +53,8 @@ class JobWorker extends Job {
       // this.Worker.postMessage({folder});
       startProcess({folder});
     } catch( e ) {
-      console.log(`[ERROR] ${this.JobName} - cannot send to thread: ${e.message}`);
+      Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
+      console.error(`${this.JobName} - cannot send to thread: ${e.message}`, e);
     }
 
     return Promise.resolve();

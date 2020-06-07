@@ -22,7 +22,7 @@ class CreateEntry extends Job {
 
   execute({fs, scraped}) {
 
-    this.Log.info(`${this.JobName} computing entry data for ${fs.title} (${fs.year})`);
+    this.Log.info(`${this.JobName} computing entry data for ${fs.title} (${fs.year}) - scraped? ${!!scraped}`);
 
     scraped = scraped || {Year: fs.year};
 
@@ -252,8 +252,18 @@ class CreateEntry extends Job {
             // let mf_path = `${MEDIA_ROOT_FOLDER}/${title} (${year})/${mediafile}`;
             res.Mediafiles.push(  this.computeMovieData(mediafileobj, res.Mediafiles.length)  );
           } else {
-            // TODO: manual association info for episode
-            this.Log.warn(`${this.JobName} EPISODE CANNOT BE ADDED - ${mediafileobj.name}`);
+            this.Log.warn(`${this.JobName} manual association of: ${mediafileobj.name}`);
+            let manual_eps = this.manualComputeEpisodes( [mediafileobj] );
+            let manual_ep = manual_eps[0];
+            if ( `e${manual_ep.Reorder}` in eps ) {
+              let ep = eps[ `e${manual_ep.Reorder}` ];
+              ep.Mediafiles = ep.Mediafiles.concat( manual_ep.Mediafiles );
+              ep.Mediafiles.forEach( (val, i) => {
+                val.Reoder = i;
+              });
+            } else {
+              eps[ `e${manual_ep.Reorder}` ] = manual_ep;
+            }
           }
         }
       }
@@ -321,7 +331,7 @@ class CreateEntry extends Job {
       let is_episode_name = true;
 
       if ( !ep_nums || ep_nums.length == 0 ) {
-        this.Log.warn(`manual compute episode number ${i} for ${basefilename}`);
+        this.Log.warn(`${this.JobName} manual compute episode number ${i} for ${basefilename}`);
         ep_nums = [i+1];
         is_episode_name = false;
       }

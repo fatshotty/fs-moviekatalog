@@ -1,7 +1,7 @@
 .env
 .vscode/
 logs/
-movies-fs*.txt
-tvshows-fs*.txt
+movies-*.txt
+tvshows-*.txt
 preferences.json
 node_modules/
