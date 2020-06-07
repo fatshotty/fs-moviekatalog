@@ -40,9 +40,11 @@ function createLog(name) {
     let _old_error = Log.error;
     Log.warn = function() {
       LOGGER.process.warn.apply(LOGGER.process, arguments);
+      return _old_warn.apply(Log, arguments);
     };
     Log.error = function() {
       LOGGER.process.error.apply(LOGGER.process, arguments);
+      return _old_error.apply(Log, arguments);
     };
   }
 
@@ -57,7 +59,7 @@ function createLog(name) {
 
 const Config = {
   CWD: Path.normalize( __dirname ),
-  // DATADIR: Path.normalize(__dirname),
+  DATADIR: Path.resolve( process.env.DATA_DIR || Path.join(__dirname, 'data') ),
 
   BASE_PATH: Path.normalize( process.env.BASE_PATH),
 
@@ -75,6 +77,13 @@ const Config = {
 
 
 };
+
+
+if ( !FS.existsSync( Config.DATADIR ) ) {
+  FS.mkdirSync( Config.DATADIR , {recursive: true});
+}
+
+console.log(`DATA: ${Config.DATADIR}`);
 
 
 const PREFERENCE_FILE = Path.join(Config.CWD, 'preferences.json');

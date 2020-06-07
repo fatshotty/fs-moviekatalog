@@ -1,7 +1,7 @@
 const {Config, createLog} = require('./utils');
 const Job = require('./job');
 const {Worker} = require('worker_threads');
-const startProcess = require('./job_worker');
+// const startProcess = require('./job_worker');
 const CronJob = require('cron').CronJob;
 
 const Log = createLog();
@@ -50,8 +50,8 @@ class JobWorker extends Job {
   execute(folder) {
     Log.info(`starting job for ${folder}`);
     try {
-      // this.Worker.postMessage({folder});
-      startProcess({folder});
+      this.Worker.postMessage({folder});
+      // startProcess({folder});
     } catch( e ) {
       Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
       console.error(`${this.JobName} - cannot send to thread: ${e.message}`, e);

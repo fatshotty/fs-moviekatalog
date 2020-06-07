@@ -20,12 +20,7 @@ class Job extends EventEmitter {
   addToQueue(data) {
     this.queue.push(data);
     if ( this.FREE ) {
-      // process.nextTick( () => {
-        // for ( let i = 0; i < Config.NUM_JOB; i++ ) {
-          this.next();
-        // }
-      // });
-      // this.FREE = false;
+      this.next();
     }
   }
 
@@ -38,6 +33,8 @@ class Job extends EventEmitter {
     this.FREE = false;
     this.execute(data).then( () => {
       this.next();
+    }).catch( (err) => {
+      this.Log.error(`${this.JobName} ERROR in execute: ${err.message}`);
     });
   }
 

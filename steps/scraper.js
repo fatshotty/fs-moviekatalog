@@ -19,7 +19,7 @@ class Scraper extends Job {
 
     this.FileContent = [];
 
-    if ( FS.existsSync(Path.join(Config.CWD, `${this.name}.txt`)) ) {
+    if ( FS.existsSync(Path.join(Config.DATADIR, `${this.name}.txt`)) ) {
       let filecontent = FS.readFileSync( Path.join(Config.CWD, `${this.name}.txt`), {encoding:'utf-8'}  )
       filecontent = filecontent.split('\n');
       this.FileContent = filecontent.map( r => r && JSON.parse(r) ).filter( r => !!r );
@@ -132,7 +132,7 @@ class Scraper extends Job {
 
 
   writeFile(res) {
-    let fd = FS.openSync( Path.join(Config.CWD, `${this.name}.txt`), 'a' );
+    let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}.txt`), 'a' );
     FS.writeSync(fd, JSON.stringify(res) + '\n' );
     FS.closeSync(fd);
   }
