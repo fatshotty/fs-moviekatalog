@@ -93,8 +93,8 @@ function jobSteps(folder) {
   //   saveConfig();
   // });
 
-  // parseRootFs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
-  parsesubfoldersfs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
+  parseRootFs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
+  // parsesubfoldersfs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
 
 
 }
