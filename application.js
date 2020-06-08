@@ -1,7 +1,14 @@
 const {Config, createLog} = require('./utils');
 const Job = require('./job');
 const {Worker} = require('worker_threads');
-// const startProcess = require('./job_worker');
+
+
+let startProcess = null;
+
+if (!Config.USE_THREAD) {
+  startProcess = require('./job_worker');
+}
+
 const CronJob = require('cron').CronJob;
 
 const Log = createLog();
@@ -13,7 +20,9 @@ class JobWorker extends Job {
   constructor(name, folder, schedule) {
     super(name);
 
-    this.spawnThread();
+    if (Config.USE_THREAD) {
+      this.spawnThread();
+    }
 
     Log.info(`new job for ${folder} at ${schedule}`);
 
@@ -50,8 +59,11 @@ class JobWorker extends Job {
   execute(folder) {
     Log.info(`starting job for ${folder}`);
     try {
-      this.Worker.postMessage({folder});
-      // startProcess({folder});
+      if ( Config.USE_THREAD ) {
+        this.Worker.postMessage({folder});
+      } else {
+        startProcess({folder});
+      }
     } catch( e ) {
       Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
       console.error(`${this.JobName} - cannot send to thread: ${e.message}`, e);

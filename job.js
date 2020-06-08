@@ -14,6 +14,7 @@ class Job extends EventEmitter {
     this.name = name;
     this.FREE = true;
     this.queue = [];
+    this.HasError = false;
   }
 
 
@@ -27,20 +28,32 @@ class Job extends EventEmitter {
   next() {
     let data = this.queue.shift();
     if ( !data ) {
+      if ( !this.HasError ) {
+        this.emit('queue-empty');
+      }
       this.FREE = true;
       return;
     }
     this.FREE = false;
     this.execute(data).then( () => {
       this.next();
-    }).catch( (err) => {
-      this.Log.error(`${this.JobName} ERROR in execute: ${err.message}`);
-    });
+    }).catch( this.onError.bind(this) );
   }
 
 
+
+  onError(err) {
+    this.HasError = true;
+    this.Log.error(`${this.JobName} ERROR: ${err && err.message}`);
+    this.next();
+  }
+
   execute(data){}
 
+  restart(){
+    this.FREE = true;
+    this.HasError = false;
+  }
 
 }
 

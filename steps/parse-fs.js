@@ -71,7 +71,7 @@ class ParseSubfoldersFS extends Job {
   loopfile() {
 
     const rl = ReadLine.createInterface({
-      input: FS.createReadStream(  Path.join(Config.CWD, `${this.name}.txt`)  ),
+      input: FS.createReadStream(  Path.join(Config.DATADIR, `${this.name}.txt`)  ),
       crlfDelay: Infinity
     });
 
@@ -93,7 +93,6 @@ class ParseSubfoldersFS extends Job {
       this.Log.warn(`${this.JobName} !!!!!! PROCESSING IN FILE !!!!!!!`);
       return this.loopfile();
     }
-
 
     return new Promise( async (resolve, reject) => {
 

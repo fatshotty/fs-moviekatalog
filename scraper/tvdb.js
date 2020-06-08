@@ -74,6 +74,12 @@ function search(terms, year) {
     return {results: result};
   }).catch( (e) => {
     // console.error(`[ERROR tvdb-search] ${e.message}`);
+    if ( e.response && e.response.status ) {
+      let err = new Error(e.message);
+      err.code = e.response.status;
+      throw err;
+    }
+    console.error('Error search on scraper TVDB:', e.message, e);
     throw e;
   });
 }
@@ -85,7 +91,7 @@ function getInfo(id, type) {
   return TvdbCli.getSeriesAllById(id).then( (data) => {
     return remapData( data );
   }).catch( (e) => {
-    console.error(`[ERROR tvdb-info] ${e.message}`);
+    console.error('Error search on scraper TVDB:', e.message, e);
     throw e;
   });
 }

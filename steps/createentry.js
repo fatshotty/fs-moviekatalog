@@ -20,29 +20,57 @@ class CreateEntry extends Job {
   }
 
 
-  execute({fs, scraped}) {
+  execute({fs, scraped, entry}) {
 
     this.Log.info(`${this.JobName} computing entry data for ${fs.title} (${fs.year}) - scraped? ${!!scraped}`);
 
     scraped = scraped || {Year: fs.year};
 
-    let entry = this.computeEntryData({fs, scraped});
+    let newEntry = this.computeEntryData({fs, scraped});
 
     if ( fs.mediafiles.length > 0 ) {
-      entry.Mediafiles = fs.mediafiles.map( (mf, i) => this.computeMovieData(mf, i) ).filter( m => !!m );
+      newEntry.Mediafiles = fs.mediafiles.map( (mf, i) => this.computeMovieData(mf, i) ).filter( m => !!m );
     }
 
     if ( fs.subfolders.length > 0 ) {
-      entry.Seasons = this.computeSeasonsData(fs.subfolders, scraped); // fs.subfolders.map( (sf, i) => this.computeSeasonData(sf, scraped, i) ).filter( s => !!s );
+      newEntry.Seasons = this.computeSeasonsData(fs.subfolders, scraped); // fs.subfolders.map( (sf, i) => this.computeSeasonData(sf, scraped, i) ).filter( s => !!s );
     }
 
-    this.Log.info(`${this.JobName} creating entry data for ${fs.title} (${fs.year})`);
+    if ( !entry ) {
+      this.Log.info(`${this.JobName} creating entry data for ${fs.title} (${fs.year})`);
 
-    return this.MovieKatalog.create( entry ).then( (createdEntry) => {
-      this.Log.info(`${this.JobName} entry created ${createdEntry.Name} (${createdEntry.Year}) - ${createdEntry.ID}`);
-    }).catch( (e) => {
-      this.Log.error(`${this.JobName} entry cannot be created ${e.message}`);
-    });
+      return this.MovieKatalog.create( newEntry ).then( (createdEntry) => {
+        this.Log.info(`${this.JobName} entry created ${createdEntry.Name} (${createdEntry.Year}) - ${createdEntry.ID}`);
+      }).catch( (e) => {
+        this.Log.error(`${this.JobName} entry ${fs.title} (${fs.year}) cannot be created: ${e.message}`);
+
+        // catch globally
+        throw e;
+      });
+
+    } else {
+      // TODO: check if entry has been updated
+      this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) check for updates`);
+
+      let shouldBeUpdate = this.checkForUpdate(newEntry, entry);
+
+      if ( !shouldBeUpdate ) {
+        this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) is already at latest version, SKIP`);
+        return Promise.resolve();
+      }
+
+      this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) - will be updated!`);
+
+      return this.MovieKatalog.update( entry ).then( (createdEntry) => {
+        this.Log.info(`${this.JobName} entry updated ${createdEntry.Name} (${createdEntry.Year}) - ${createdEntry.ID}`);
+      }).catch( (e) => {
+        this.Log.error(`${this.JobName} entry ${fs.title} (${fs.year}) cannot be updated: ${e.message}`);
+
+        // catch globally
+        throw e;
+      });
+
+    }
 
   }
 
@@ -283,7 +311,7 @@ class CreateEntry extends Job {
 
       let s = this.manualComputeSingleSeason(subfolder, year++)
 
-      s.Reorder = s.Reorder || i+1;
+      s.Reorder = s.Reorder || i;
 
       seasons.push(s);
 
@@ -360,6 +388,83 @@ class CreateEntry extends Job {
 
     return Object.values(eps).sort( (e1, e2) => e1.Reorder > e2.Reorder ? 1 : -1 );
 
+  }
+
+
+  getMediafile(mediafiles, filename) {
+    return
+  }
+
+
+  checkForUpdate(newEntry, savedEntry) {
+    let shouldBeUpdate = false;
+
+    // check mediafiles
+    for ( let newMediafile of (newEntry.Mediafiles || []) ) {
+      let savedMediafile = savedEntry.Mediafiles.filter( m => m.Filename == newMediafile.Filename )[0];
+
+      if ( savedMediafile ) {
+        // check hidden flag
+
+        if ( String(savedMediafile.Hidden) != String(newMediafile.Hidden) ) {
+          savedMediafile.Hidden = newMediafile.Hidden;
+          shouldBeUpdate = true;
+        }
+
+        // check size
+        if ( savedMediafile.Size != newMediafile.Size )  {
+          savedMediafile.Size = newMediafile.Size;
+          shouldBeUpdate = true;
+        }
+
+      } else {
+        newMediafile.Reorder = savedEntry.Mediafiles.length;
+        savedEntry.Mediafiles.push(newMediafile);
+        shouldBeUpdate = true;
+      }
+
+    }
+
+
+    // check seasons/subfolder
+    for ( let newSeason of (newEntry.Seasons || []) ) {
+      let savedSeason = savedEntry.Seasons.filter( s => s.Name == newSeason.Name /* && s.Reorder == newSeason.Reorder */ )[0];
+
+      if ( savedSeason ) {
+
+        // check episodes
+        for ( let newEpisode of (newSeason.Episodes || []) ) {
+          let savedEpisode = savedSeason.Episodes.filter( e => e.Name == newEpisode.Name /* && e.Reorder == newEpisode.Reorder */)[0];
+
+          if (savedEpisode ) {
+
+            for ( let newMediafile of (newEpisode.Mediafiles || []) ) {
+              let savedMediafile = savedEpisode.Mediafiles.filter(m => m.Filename == newMediafile.Filename)[0];
+
+              if ( !savedMediafile ) {
+                newMediafile.Reorder = savedEpisode.Mediafiles.length;
+                savedEpisode.Mediafiles.push(newMediafile);
+                shouldBeUpdate = true;
+              }
+            }
+
+          } else {
+            savedSeason.Episodes.push(newEpisode);
+            shouldBeUpdate = true;
+          }
+        }
+
+      } else {
+        // savedSeason.Reorder = savedEntry.Seasons.length;
+        savedEntry.Seasons.push(newSeason);
+        shouldBeUpdate = true;
+      }
+
+    }
+
+
+
+    return shouldBeUpdate;
   }
 
 }

@@ -72,7 +72,7 @@ class MovieKatalog {
       });
 
       req.on('error', (e) => {
-        process.nextTick( reject );
+        process.nextTick( () => reject(e) );
       });
 
       req.end();
@@ -112,7 +112,7 @@ class MovieKatalog {
       });
 
       req.on('error', (e) => {
-        process.nextTick( reject );
+        process.nextTick( () => reject(e) );
       });
 
       req.write( JSON.stringify(entry) );
@@ -153,7 +153,7 @@ class MovieKatalog {
       });
 
       req.on('error', (e) => {
-        process.nextTick( reject );
+        process.nextTick( () => reject(e) );
       });
 
       req.write( JSON.stringify(entry) );

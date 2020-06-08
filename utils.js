@@ -7,6 +7,39 @@ const Winston = require('winston');
 
 const LOGGER = {};
 
+
+//        s m h d M dw
+// CRON = 0 0 * * * *
+
+const Config = {
+  CWD: Path.normalize( __dirname ),
+  DATADIR: Path.resolve( process.env.DATA_DIR || Path.join(__dirname, 'data') ),
+
+  LOG_LEVEL: process.env.LOG_LEVEL,
+
+  BASE_PATH: Path.normalize( process.env.BASE_PATH),
+
+  TMDB_API_KEY: process.env.TMDB_API_KEY,
+  IMDB_API_KEY: process.env.IMDB_API_KEY,
+  TVDB_API_KEY: process.env.TVDB_API_KEY,
+
+  USER_UUID: process.env.USER_UUID,
+  CATALOG_UUID: process.env.CATALOG_UUID,
+  ApiUUID: process.env.ApiUUID,
+  ApiKey: process.env.ApiKey,
+
+  HOSTNAME: process.env.HOSTNAME,
+  PORT: process.env.PORT,
+
+  USE_THREAD: true
+
+};
+
+if ( Config.USE_THREAD ) {
+  console.log(`!!! USE THREAD !!!`)
+}
+
+
 function createLog(name) {
 
   name = name || 'process';
@@ -23,7 +56,7 @@ function createLog(name) {
   transports.push( new Winston.transports.Console() );
 
   const Log = Winston.createLogger({
-    level: 'info',
+    level: Config.LOG_LEVEL || 'debug',
     transports: transports,
     format: Winston.format.combine(
       Winston.format.timestamp({format:'DD-MM-YYYY HH:mm:ss.SSSSS'}),
@@ -54,30 +87,6 @@ function createLog(name) {
 
 
 
-//        s m h d M dw
-// CRON = 0 0 * * * *
-
-const Config = {
-  CWD: Path.normalize( __dirname ),
-  DATADIR: Path.resolve( process.env.DATA_DIR || Path.join(__dirname, 'data') ),
-
-  BASE_PATH: Path.normalize( process.env.BASE_PATH),
-
-  TMDB_API_KEY: process.env.TMDB_API_KEY,
-  IMDB_API_KEY: process.env.IMDB_API_KEY,
-  TVDB_API_KEY: process.env.TVDB_API_KEY,
-
-  USER_UUID: process.env.USER_UUID,
-  CATALOG_UUID: process.env.CATALOG_UUID,
-  ApiUUID: process.env.ApiUUID,
-  ApiKey: process.env.ApiKey,
-
-  HOSTNAME: process.env.HOSTNAME,
-  PORT: process.env.PORT,
-
-
-};
-
 
 if ( !FS.existsSync( Config.DATADIR ) ) {
   FS.mkdirSync( Config.DATADIR , {recursive: true});
@@ -86,21 +95,23 @@ if ( !FS.existsSync( Config.DATADIR ) ) {
 console.log(`DATA: ${Config.DATADIR}`);
 
 
-const PREFERENCE_FILE = Path.join(Config.CWD, 'preferences.json');
+const PREFERENCE_FILE = Path.join(Config.DATADIR, 'preferences.json');
 let FOLDERS = [
   // {
   //   Mime: 'video',
   //   Scope: 'movies',
   //   Path:  'movies',
   //   Schedule: '0 0 0 * * *',
-  //   lastScan: 0
+  //   lastScan: 0,
+  //   Scraper: 'movie'
   // },
   {
     Mime: 'video',
     Scope: 'tvshows',
     Path:  'tvshows',
     Schedule: '0 0 0 * * *',
-    lastScan: 0
+    lastScan: 0,
+    Scraper: 'tv'
   }
   // 'tvshows': 'tvshows',
   // 'documentaries-movies': 'documentaries',

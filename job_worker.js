@@ -5,10 +5,12 @@ const {ParseSubfoldersFS, ParseRootFS} = require('./steps/parse-fs');
 const DiffDB = require('./steps/diff-db');
 const ScraperDB = require('./steps/scraper');
 const CreateEntry = require('./steps/createentry');
-const UpdateEntry = require('./steps/updateentry');
 
 const Log = createLog();
-Worker.parentPort.on('message', startProcess);
+
+if ( Config.USE_THREAD ) {
+  Worker.parentPort.on('message', startProcess);
+}
 
 
 function startProcess({folder}) {
@@ -21,62 +23,79 @@ function startProcess({folder}) {
 }
 
 
+let parseRootFs = null;
+let parsesubfoldersfs = null;
+let diffdb =null;
+let scraper = null;
+let createEntry = null;
+
+
 
 function jobSteps(folder) {
   let SCOPE = Config.Folders.filter(f => f.Path == folder)[0];
 
-  let parseRootFs = new ParseRootFS(SCOPE);
-  let parsesubfoldersfs = new ParseSubfoldersFS(SCOPE);
-  let diffdb = new DiffDB(SCOPE);
-  let scraper = new ScraperDB(SCOPE);
-  let createEntry = new CreateEntry(SCOPE);
-  let updateentry = new UpdateEntry(SCOPE);
+  if ( ! parseRootFs ) {
+    parseRootFs = new ParseRootFS(SCOPE);
+    parseRootFs.on('folder', (jsonRow) => {
+      // console.log(`${folder} - found new folder`);
+      process.nextTick( () => parsesubfoldersfs.addToQueue(jsonRow) );
+    });
+  }
+  if ( ! parsesubfoldersfs ) {
+    parsesubfoldersfs = new ParseSubfoldersFS(SCOPE);
+    parsesubfoldersfs.on('entry', (jsonRow) => {
+      // console.log(`${folder} - subfolders`);
+      process.nextTick( () => diffdb.addToQueue(jsonRow) );
+    })
+  }
+  if ( ! diffdb ) {
+    diffdb = new DiffDB(SCOPE);
+    diffdb.on('newentry', (jsonRow) => {
+      // console.log(`${folder} - newentry`);
+      process.nextTick( () => scraper.addToQueue( jsonRow ) );
+    });
 
-  // console.log(3)
+    diffdb.on('update', (jsonRow) => {
+      // console.log(`${folder} - update`);
+      // scraper.addToQueue( data );
+      process.nextTick( () => scraper.addToQueue( jsonRow ) );
+    });
+  }
+  if ( ! scraper ) {
+    scraper = new ScraperDB(SCOPE);
+    scraper.on('scraped', (data) => {
+      // console.log(`${folder} - scraped`);
+      // {fs: data, scraped: null}
+      process.nextTick( () => createEntry.addToQueue(data) );
+    });
 
-  parseRootFs.on('folder', (jsonRow) => {
-    // console.log(`${folder} - found new folder`);
-    parsesubfoldersfs.addToQueue(jsonRow);
-  });
+    scraper.on('update', (data) => {
+      // console.log(`${folder} - scraper-update`);
+      // scraper.addToQueue( jsonRow );
+      process.nextTick( () => createEntry.addToQueue( data ) );
+    });
+  }
 
-  parsesubfoldersfs.on('entry', (jsonRow) => {
-    // console.log(`${folder} - subfolders`);
-    diffdb.addToQueue(jsonRow);
-  })
-
-  diffdb.on('newentry', (jsonRow) => {
-    // console.log(`${folder} - newentry`);
-    scraper.addToQueue( jsonRow );
-  });
-
-  diffdb.on('update', (data) => {
-    // console.log(`${folder} - update`);
-    // scraper.addToQueue( data );
-    updateentry.addToQueue( data );
-  });
-
-  scraper.on('scraped', (data) => {
-    // console.log(`${folder} - scraped`);
-    // {fs: data, scraped: null}
-    createEntry.addToQueue(data);
-  });
-
-  scraper.on('update', (data) => {
-    // console.log(`${folder} - scraper-update`);
-    // scraper.addToQueue( jsonRow );
-    updateentry.addToQueue( data );
-  });
+  if ( ! createEntry ) {
+    createEntry = new CreateEntry(SCOPE);
+  }
 
 
-  // parseRootFs.on('scanned', (ts) => {
-  //   SCOPE.lastScan = ts;
+  parseRootFs.restart();
+  parsesubfoldersfs.restart();
+  diffdb.restart();
+  scraper.restart();
+  createEntry.restart();
+
+
+  // createEntry.on('queue-empty', () => {
+  //   SCOPE.lastScan = Date.now();
   //   saveConfig();
   // });
 
-  // console.log(Path.join(Config.BASE_PATH, folder));
-
   // parseRootFs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
   parsesubfoldersfs.addToQueue(  Path.join(Config.BASE_PATH, folder)  );
+
 
 }
 

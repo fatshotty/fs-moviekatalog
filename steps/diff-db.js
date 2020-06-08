@@ -29,14 +29,12 @@ class DiffDB extends Job {
 
         this.Log.info(`${this.JobName} ${this._scope.Scope} found for: ${title} (${year}) - check for update`);
 
-        // TODO: process difference
         this.emit('update', {fs: jsonRow, entry});
 
       } else {
         this.Log.info(`${this.JobName} no ${this._scope.Scope} found for: ${title} (${year}) - create a new entry`);
-        // save into file for TMDB scraper
 
-        this.emit('newentry', jsonRow);
+        this.emit('newentry', {fs: jsonRow});
 
       }
 
