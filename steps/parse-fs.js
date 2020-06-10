@@ -1,4 +1,4 @@
-const {Config, createLog} = require('../utils');
+const {Config} = require('../utils');
 const Job = require('../job');
 const Path = require('path');
 const FS = require('fs');
@@ -10,9 +10,7 @@ const ReadLine = require('readline');
 class ParseRootFS extends Job {
 
   constructor(SCOPE) {
-    super(`${SCOPE.Scope}-rootfs`);
-    this._scope = SCOPE;
-    this.Log = createLog(SCOPE.Scope);
+    super(SCOPE);
   }
 
   execute(basepath) {
@@ -61,12 +59,6 @@ class ParseRootFS extends Job {
 
 
 class ParseSubfoldersFS extends Job {
-  constructor(SCOPE) {
-    super(`${SCOPE.Scope}-subfolders`);
-    this._scope = SCOPE;
-    this.Log = createLog(SCOPE.Scope);
-  }
-
 
   loopfile() {
 
@@ -89,10 +81,10 @@ class ParseSubfoldersFS extends Job {
   async execute({title, year, basepath, folder}) {
 
 
-    if ( FS.existsSync( Path.join(Config.DATADIR, `${this.name}.txt`) ) ) {
-      this.Log.warn(`${this.JobName} !!!!!! PROCESSING IN FILE !!!!!!!`);
-      return this.loopfile();
-    }
+    // if ( FS.existsSync( Path.join(Config.DATADIR, `${this.name}.txt`) ) ) {
+    //   this.Log.warn(`${this.JobName} !!!!!! PROCESSING IN FILE !!!!!!!`);
+    //   return this.loopfile();
+    // }
 
     return new Promise( async (resolve, reject) => {
 
@@ -104,9 +96,20 @@ class ParseSubfoldersFS extends Job {
         return resolve();
       }
 
+      if ( this._scope.ForceSubfolder ) {
+        let subfolder = this._scope.ForceSubfolder;
+        if ( objReturn.mediafiles.length > 0 ) {
+          objReturn.subfolders.push({
+            name: subfolder,
+            mediafiles: objReturn.mediafiles.splice(0),
+            subfolders: []
+          });
+        }
+      }
+
       this.Log.info( `${this.JobName} found [${objReturn.subfolders.length} subfolders] and [${objReturn.mediafiles.length} mediafiles] in ${folder}` );
 
-      // this.writeFile(objReturn);
+      this.writeFile(objReturn);
 
       this.emit('entry', objReturn);
 
@@ -146,7 +149,7 @@ class ParseSubfoldersFS extends Job {
       } else if ( stat.isFile() ) {
 
         let mime = Mime.getType(content);
-        if ( mime.startsWith( this._scope.Mime ) ) {
+        if ( mime && mime.startsWith( this._scope.Mime ) ) {
 
           if ( stat.mtimeMs > this._scope.lastScan ) {
             has_been_updated = true;

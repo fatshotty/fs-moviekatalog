@@ -9,12 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chokidar": "^3.4.0",
+    "dotenv": "^8.2.0",
     "imdb-api": "4.0.2",
+    "mime": "2.4.4",
     "node-tvdb": "4.1.0",
     "tmdb": "2.5.0",
-    "mime": "2.4.4",
-    "winston": "3.2.1",
-    "dotenv": "^8.2.0",
-    "cron": "^1.8.2"
+    "winston": "3.2.1"
   }
 }

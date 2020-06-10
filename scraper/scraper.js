@@ -24,6 +24,7 @@ function getInfo(id, type = 'movie') {
       p = new Promise( (resolve, reject) => {
         function redoSearchImdb() {
           return ImdbCli.get({'id': imdbid}, {headers: { 'Accept-Language': 'it'}}).then( (imdb_data) => {
+            delete data.opts;
             data.imdb_data = imdb_data;
             return resolve(data);
           }).catch( (e) => {

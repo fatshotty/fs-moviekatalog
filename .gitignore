@@ -5,3 +5,5 @@ movies-*.txt
 tvshows-*.txt
 preferences.json
 node_modules/
+data/
+test.js

@@ -2,6 +2,11 @@ const {Config, createLog} = require('./utils');
 const Job = require('./job');
 const {Worker} = require('worker_threads');
 
+console.log(`DATA: ${Config.DATADIR}`);
+
+if ( Config.USE_THREAD ) {
+  console.log(`!!! USE THREAD !!!`)
+}
 
 let startProcess = null;
 
@@ -14,28 +19,16 @@ const CronJob = require('cron').CronJob;
 const Log = createLog();
 
 
-
 class JobWorker extends Job {
 
-  constructor(name, folder, schedule) {
-    super(name);
+  constructor(SCOPE) {
+    super(SCOPE);
 
     if (Config.USE_THREAD) {
       this.spawnThread();
     }
 
-    Log.info(`new job for ${folder} at ${schedule}`);
-
-    // this._job = new CronJob(
-    //   schedule,                           // schedule
-    //   this.execute.bind(this, folder),    // onTick
-    //   null,                               // onComplete
-    //   true,                               // start
-    //   'Europe/Amsterdam',                 // timeZone
-    //   null,                               // context
-    //   true                                // runOnInit -> execute now
-    // );
-    this.execute(folder);
+    Log.info(`new job configured for ${SCOPE.Name}, time: ${SCOPE.Schedule}`);
   }
 
 
@@ -44,7 +37,8 @@ class JobWorker extends Job {
 
     this.Worker.on('exit', (code) => {
       Log.warn(`${this.JobName} - Worker is exited: ${code}`);
-      this.spawnThread();
+      // this.spawnThread();
+      // TODO: send message to Telegram BOT
     });
     this.Worker.on('message', (data) => {
       Log.info(`${this.JobName} Worker - received data ${data}`);
@@ -57,12 +51,12 @@ class JobWorker extends Job {
 
 
   execute(folder) {
-    Log.info(`starting job for ${folder}`);
+    Log.info(`Starting job for ${this._scope.Path}`);
     try {
       if ( Config.USE_THREAD ) {
-        this.Worker.postMessage({folder});
+        this.Worker.postMessage(this._scope);
       } else {
-        startProcess({folder});
+        startProcess(this._scope);
       }
     } catch( e ) {
       Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
@@ -76,11 +70,17 @@ class JobWorker extends Job {
 
 
 Log.info(`*** starting ${Date.now()} ***`);
-Log.info(`folder to process: ${Config.Folders.map( f => f.Scope).join(', ')}`);
+Log.info(`folder to process: ${Config.Folders.map( f => f.Path).join(', ')}`);
 
 
-for ( let folder of Config.Folders ) {
+for ( let scope of Config.Folders ) {
 
-  let jobWorker = new JobWorker(folder.Scope, folder.Path, folder.Schedule)
+  if ( ! scope.Enabled ) {
+    Log.warn(`${scope.Name} is NOT enabled`);
+    continue;
+  }
+
+  let jobWorker = new JobWorker(scope);
+  jobWorker.addToQueue(scope.Path);
 
 }

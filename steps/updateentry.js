@@ -1,4 +1,4 @@
-const {Config, createLog} = require('../utils');
+const {Config} = require('../utils');
 const Job = require('../job');
 const MovieKatalog = require('../moviekatalog');
 const Path = require('path');
@@ -9,12 +9,9 @@ const SXXEYY_REGEXP = /S\d{2}E(\d{2,3})(?:-E(\d{2,3}))?/;
 class UpdateEntry extends Job {
 
   constructor(SCOPE) {
-    super(`${SCOPE.Scope}-updater`);
-    this._scope = SCOPE;
-    this.Log = createLog(SCOPE.Scope);
+    super(SCOPE);
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
-
   }
 
 

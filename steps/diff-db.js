@@ -1,4 +1,4 @@
-const {Config, createLog} = require('../utils');
+const {Config} = require('../utils');
 const Job = require('../job');
 const MovieKatalog = require('../moviekatalog');
 
@@ -6,13 +6,9 @@ const MovieKatalog = require('../moviekatalog');
 class DiffDB extends Job {
 
   constructor(SCOPE){
-    super(`${SCOPE.Scope}-pr`);
+    super(SCOPE);
 
     this.category = SCOPE.Scope;
-
-    this._scope = SCOPE;
-
-    this.Log = createLog(SCOPE.Scope);
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
   }

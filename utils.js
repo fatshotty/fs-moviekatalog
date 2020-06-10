@@ -35,11 +35,6 @@ const Config = {
 
 };
 
-if ( Config.USE_THREAD ) {
-  console.log(`!!! USE THREAD !!!`)
-}
-
-
 function createLog(name) {
 
   name = name || 'process';
@@ -92,30 +87,69 @@ if ( !FS.existsSync( Config.DATADIR ) ) {
   FS.mkdirSync( Config.DATADIR , {recursive: true});
 }
 
-console.log(`DATA: ${Config.DATADIR}`);
-
-
 const PREFERENCE_FILE = Path.join(Config.DATADIR, 'preferences.json');
 let FOLDERS = [
-  // {
-  //   Mime: 'video',
-  //   Scope: 'movies',
-  //   Path:  'movies',
-  //   Schedule: '0 0 0 * * *',
-  //   lastScan: 0,
-  //   Scraper: 'movie'
-  // },
   {
-    Mime: 'video',
-    Scope: 'tvshows',
-    Path:  'tvshows',
-    Schedule: '0 0 0 * * *',
-    lastScan: 0,
-    Scraper: 'tv'
+    "Enabled": true,
+    "Name": "movies",
+    "Scope": "movies",
+    "Path": "movies",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": "movie",
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
+    "Name": "tvshows",
+    "Scope": "tvshows",
+    "Path": "tvshows",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": "tv",
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
+    "Name": "docu-movie",
+    "Scope": "documentaries",
+    "Path": "documentaries-movies",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": "movie",
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
+    "Name": "docu-serie",
+    "Scope": "documentaries",
+    "Path": "documentaries-series",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": "tv",
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
+    "Name": "videos",
+    "Scope": "videos",
+    "Path": "videos",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": false,
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
+    "Name": "videoscoll",
+    "Scope": "videos",
+    "Path": "videos-collection",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": false,
+    "Mime": "video",
+    "ForceSubfolder": "videos"
   }
-  // 'tvshows': 'tvshows',
-  // 'documentaries-movies': 'documentaries',
-  // 'documentaries-series': 'documentaries'
 ];
 
 function saveConfig() {

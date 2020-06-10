@@ -1,4 +1,4 @@
-const {Config, createLog} = require('../utils');
+const {Config} = require('../utils');
 const Job = require('../job');
 const ScraperLib = require('../scraper/scraper');
 const MovieKatalog = require('../moviekatalog');
@@ -10,12 +10,9 @@ const SCRAPERS = ['TMDB', 'TVDB'];
 class Scraper extends Job {
 
   constructor(SCOPE) {
-    super(`${SCOPE.Scope}-scraper`);
-    this._scope = SCOPE;
-    this.Log = createLog(SCOPE.Scope);
+    super(SCOPE);
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
-
 
     this.FileContent = [];
 
@@ -32,11 +29,9 @@ class Scraper extends Job {
 
   searchInCache(data) {
 
-    return this.FileContent.filter( (r) => {
-
+    return this.FileContent.find( (r) => {
       return r.fs.title.toLowerCase() == data.title.toLowerCase()  &&  r.fs.year == data.year;
-
-    })[0];
+    });
 
   }
 
@@ -50,7 +45,12 @@ class Scraper extends Job {
 
   onError(err) {
     this.HasError = true;
-    this.Log.error(`${this.JobName} ERROR: ${err && err.message}`);
+    if ( err.code == 401 ) {
+      // block on api-rate-limit
+      this.Log.error(`${this.JobName} got api rate limit. STOPPED!`);
+      return;
+    }
+    super.onError(err);
   }
 
 
@@ -63,7 +63,7 @@ class Scraper extends Job {
 
     if ( this._scope.Scraper === false ) {
       // passthrought
-      this.emit( 'scraped', {fs: data, scraped: null} );
+      this.emit( 'scraped', {...data, scraped: null} );
       return Promise.resolve();
     }
 
@@ -97,7 +97,6 @@ class Scraper extends Job {
           // TODO: check error and throw if 401
           // entry not found on scraper, try next scraper
           if ( e.code == 401 ) {
-            // block on api-rate-limit
             throw e;
           }
           this.Log.debug(`${this.JobName} ${title} (${year}) not found on ${scraper}`);
@@ -132,8 +131,6 @@ class Scraper extends Job {
           if ( entries.length == 0 ) {
             // scrape a new entry
             let returnedObj = {scraped: objScraped, ...data};
-            // save in cache
-            this.writeFile( {scraped: objScraped, fs: { title: data.fs.title, year: data.fs.year} } );
             this.emit( 'scraped', returnedObj );
           } else {
             entry = entries[0];
@@ -253,6 +250,9 @@ class Scraper extends Job {
 
 
   writeFile(res) {
+
+    this.FileContent.push(res);
+
     let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}.txt`), 'a' );
     FS.writeSync(fd, JSON.stringify(res) + '\n' );
     FS.closeSync(fd);

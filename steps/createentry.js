@@ -1,4 +1,4 @@
-const {Config, createLog, extractRegExp} = require('../utils');
+const {Config, extractRegExp} = require('../utils');
 const Job = require('../job');
 const MovieKatalog = require('../moviekatalog');
 const Path = require('path');
@@ -11,9 +11,7 @@ const SXXEYY_REGEXP = /S\d{2}E(\d{2,3})(?:-E(\d{2,3}))?/;
 class CreateEntry extends Job {
 
   constructor(SCOPE) {
-    super(`${SCOPE.Scope}-creater`);
-    this._scope = SCOPE;
-    this.Log = createLog(SCOPE.Scope);
+    super(SCOPE);
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
 
@@ -209,7 +207,7 @@ class CreateEntry extends Job {
         if ( subfolder_number && subfolder_number[0] ) {
           subfolder_number = parseInt(subfolder_number[0], 10);
 
-          let selectedSeason = scrapedSeasons.filter( s => s.Number == subfolder_number )[0];
+          let selectedSeason = scrapedSeasons.find( s => s.Number == subfolder_number );
 
           if ( selectedSeason ) {
 
@@ -262,7 +260,7 @@ class CreateEntry extends Job {
         for ( let ep_num of ep_nums ) {
           if ( !ep_num ) continue;
           ep_num = parseInt(ep_num, 10);
-          let selectedEp = episodes.filter( e => e.Number == ep_num )[0];
+          let selectedEp = episodes.find( e => e.Number == ep_num );
 
           if ( selectedEp ) {
 
@@ -351,7 +349,7 @@ class CreateEntry extends Job {
       let basefilename = Path.basename(mediafile);
 
       let baseepindex = basefilename.lastIndexOf(' - ');
-      let baseepisodename = baseepindex > -1 ? basefilename.substring(0, baseepindex) : baseepindex;
+      let baseepisodename = baseepindex > -1 ? basefilename.substring(0, baseepindex) : basefilename;
       baseepisodename = baseepisodename.trim();
 
       let ep_nums = extractRegExp(SXXEYY_REGEXP, mediafile, 1);
@@ -391,17 +389,12 @@ class CreateEntry extends Job {
   }
 
 
-  getMediafile(mediafiles, filename) {
-    return
-  }
-
-
   checkForUpdate(newEntry, savedEntry) {
     let shouldBeUpdate = false;
 
     // check mediafiles
     for ( let newMediafile of (newEntry.Mediafiles || []) ) {
-      let savedMediafile = savedEntry.Mediafiles.filter( m => m.Filename == newMediafile.Filename )[0];
+      let savedMediafile = savedEntry.Mediafiles.find( m => m.Filename == newMediafile.Filename );
 
       if ( savedMediafile ) {
         // check hidden flag
@@ -428,18 +421,18 @@ class CreateEntry extends Job {
 
     // check seasons/subfolder
     for ( let newSeason of (newEntry.Seasons || []) ) {
-      let savedSeason = savedEntry.Seasons.filter( s => s.Name == newSeason.Name /* && s.Reorder == newSeason.Reorder */ )[0];
+      let savedSeason = savedEntry.Seasons.find( s => s.Name == newSeason.Name /* && s.Reorder == newSeason.Reorder */ );
 
       if ( savedSeason ) {
 
         // check episodes
         for ( let newEpisode of (newSeason.Episodes || []) ) {
-          let savedEpisode = savedSeason.Episodes.filter( e => e.Name == newEpisode.Name /* && e.Reorder == newEpisode.Reorder */)[0];
+          let savedEpisode = savedSeason.Episodes.find( e => e.Name == newEpisode.Name /* && e.Reorder == newEpisode.Reorder */);
 
           if (savedEpisode ) {
 
             for ( let newMediafile of (newEpisode.Mediafiles || []) ) {
-              let savedMediafile = savedEpisode.Mediafiles.filter(m => m.Filename == newMediafile.Filename)[0];
+              let savedMediafile = savedEpisode.Mediafiles.find(m => m.Filename == newMediafile.Filename);
 
               if ( !savedMediafile ) {
                 newMediafile.Reorder = savedEpisode.Mediafiles.length;
