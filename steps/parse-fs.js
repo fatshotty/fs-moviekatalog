@@ -62,9 +62,6 @@ class ParseRootFS extends Job {
 
         }
 
-
-        // this.watch(basepath);
-
         resolve();
 
       });
@@ -84,7 +81,7 @@ class ParseRootFS extends Job {
     }
 
     p.then( () => {
-      this.Log.info(`${this.JobName} restart watcher on ${this._scope.Path}`);
+      this.Log.warn(`${this.JobName} *** restart watcher on ${this._scope.Path}`);
 
       this.Watcher = Chokidar.watch( basepath , {
         persistent: true,
@@ -94,23 +91,28 @@ class ParseRootFS extends Job {
         }
       });
 
+
+      this.Log.warn(`${this.JobName} *** watcher has been set`);
+
       let DATA = {};
       let tmr = null;
 
       this.Watcher.on('ready', () => {
-        this.Log.info(`${this.JobName} watcher is ready to watch`);
+
+        this.Log.warn(`${this.JobName} *** watcher is ready to watch`);
+
         this.Watcher
           .on('add', (path) => {
             let stat = FS.statSync(path);
             if ( stat.mtimeMs <= this.LastScan ) {
               // file has been renamed
-              this.Log.info(`${this.JobName} watcher: file has been renamed: ${path}`);
+              this.Log.info(`${this.JobName} watcher - file has been renamed: ${path}`);
               this.parsePath(basepath, path, DATA);
 
               clearTimeout(tmr);
               tmr = setTimeout( () => {
                 let values = Object.values(DATA);
-                this.Log.info(`${this.JobName} watcher: fire ${values.length} events for folder in 'filerenamed'`);
+                this.Log.info(`${this.JobName} watcher - fire ${values.length} events for folder in 'filerenamed'`);
                 DATA = {};
                 for ( let v of values ) {
                   this.parseSubfoldersFS.computeObject( v );
@@ -123,19 +125,57 @@ class ParseRootFS extends Job {
           })
           .on('unlink', (path) => {
             let relativePath = Path.join('/', Path.relative( Path.join(basepath, '../'), path ) )
-            this.Log.info(`${this.JobName} watcher: file has been removed: ${relativePath}`);
+            this.Log.info(`${this.JobName} watcher - file has been removed: ${relativePath}`);
 
-            // TODO: check file into DATA object (in case of double-renaming)
+            this.searchFile(relativePath, DATA);
 
             this.emit('fileremoved', relativePath);
           })
-          .on('error', error => console.log(`Watcher error: ${error}`))
+          .on('error', (error) => {
+            this.Log.error(`${this.JobName} Watcher - error: ${error}`);
+            this.Log.error(`${this.JobName} ${JSON.stringify(error.stack)}`);
+          })
       });
     });
   }
 
+  searchFile(filepath, DATA) {
 
+    let keys = Object.keys( DATA );
 
+    for ( let key of keys ) {
+      let value = DATA[ key ];
+
+      // {title, year, subfolders: [], mediafiles: []}
+      for ( let i = value.mediafiles.length - 1, mf; mf = value.mediafiles[ i ]; i-- ) {
+
+        if ( mf.file == filepath ) {
+          value.mediafiles.splice( i, 1 );
+        }
+
+      }
+
+      for ( let i = value.subfolders.length - 1, subf; subf = value.subfolders[ i ]; i-- ) {
+        for ( let j = subf.mediafiles.length - 1, mf; mf = subf.mediafiles[ j ]; j-- ) {
+
+          if ( mf.file == filepath ) {
+            subf.mediafiles.splice( j, 1 );
+          }
+
+        }
+
+        if ( subf.mediafiles.length <= 0 ) {
+          value.subfolders.splice( i , 1 );
+        }
+      }
+
+      if ( value.mediafiles.length <= 0 && value.subfolders.length <= 0 ) {
+        delete DATA[ key ];
+      }
+
+    }
+
+  }
 
 
   parsePath(basepath, filepath, DATA) {

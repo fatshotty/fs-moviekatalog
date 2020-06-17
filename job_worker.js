@@ -51,7 +51,7 @@ class Executor {
 
     this.Job = new CronJob(
       SCOPE.Schedule,
-      this.execute.bind(this),
+      this._execute.bind(this),
       null,
       false,
       'Europe/Rome'
@@ -104,17 +104,22 @@ class Executor {
   }
 
 
-  execute() {
-
+  _execute() {
     this.Log.warn(`[${this._scope.Name}] *** executing next tick on ${ new Date() } ***`)
 
     let ts = this.parsesubfoldersfs.LastScan;
     this._scope.lastScan = ts;
 
+    // this.parseRootFs.watch(  Path.join(Config.BASE_PATH, this._scope.Path)   );
+
     Worker.parentPort.postMessage({action: 'update-ts', timestamp: ts});
 
-    this.parseRootFs.addToQueue(  Path.join(Config.BASE_PATH, this._scope.Path)  );
+    this.execute();
+  }
 
+
+  execute() {
+    this.parseRootFs.addToQueue(  Path.join(Config.BASE_PATH, this._scope.Path)  );
   }
 
 }
