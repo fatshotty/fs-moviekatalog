@@ -1,4 +1,4 @@
-const {Config, createLog} = require('./utils');
+const {Config, createLog, saveConfig} = require('./utils');
 const Job = require('./job');
 const {Worker} = require('worker_threads');
 
@@ -14,10 +14,7 @@ if (!Config.USE_THREAD) {
   startProcess = require('./job_worker');
 }
 
-const CronJob = require('cron').CronJob;
-
 const Log = createLog();
-
 
 class JobWorker extends Job {
 
@@ -29,6 +26,7 @@ class JobWorker extends Job {
     }
 
     Log.info(`new job configured for ${SCOPE.Name}, time: ${SCOPE.Schedule}`);
+
   }
 
 
@@ -41,7 +39,12 @@ class JobWorker extends Job {
       // TODO: send message to Telegram BOT
     });
     this.Worker.on('message', (data) => {
-      Log.info(`${this.JobName} Worker - received data ${data}`);
+      Log.info(`${this.JobName} Worker - received data ${data.action}`);
+      if ( data.action == 'update-ts') {
+        Log.info(`${this.JobName} Worker - updating TS to ${data.timestamp}`);
+        this._scope.lastScan = data.timestamp;
+        saveConfig();
+      }
     });
     this.Worker.on('error', (e) => {
       Log.error(`${this.JobName} Worker - ERROR ${e.message}`);
@@ -54,9 +57,9 @@ class JobWorker extends Job {
     Log.info(`Starting job for ${this._scope.Path}`);
     try {
       if ( Config.USE_THREAD ) {
-        this.Worker.postMessage(this._scope);
+        this.Worker.postMessage(this._scope.Name);
       } else {
-        startProcess(this._scope);
+        startProcess(this._scope.Name);
       }
     } catch( e ) {
       Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
@@ -70,7 +73,14 @@ class JobWorker extends Job {
 
 
 Log.info(`*** starting ${Date.now()} ***`);
-Log.info(`folder to process: ${Config.Folders.map( f => f.Path).join(', ')}`);
+Log.info(`folder to process: ${Config.Folders.filter(f => !!f.Enabled).map( f => f.Path).join(', ')}`);
+
+
+
+process.on('uncaughtException', (err, origin) => {
+  Log.error(`[ERROR] ${err} - ${origin}`);
+  Log.error(`[ERROR] ${JSON.stringify(err.stack, null, 2)}`);
+});
 
 
 for ( let scope of Config.Folders ) {

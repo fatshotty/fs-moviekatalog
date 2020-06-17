@@ -7,3 +7,5 @@ preferences.json
 node_modules/
 data/
 test.js
+
+.DS_Store

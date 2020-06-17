@@ -5,12 +5,23 @@ const MovieKatalog = require('../moviekatalog');
 
 class DiffDB extends Job {
 
+
+  get JobName() {
+    return `[${this.name}-diff]`;
+  }
+
   constructor(SCOPE){
     super(SCOPE);
 
     this.category = SCOPE.Scope;
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
+  }
+
+  onError(err) {
+    this.HasError = true;
+    this.Log.error(`${this.JobName} ERROR: ${err && err.message}`);
+    this.next();
   }
 
 

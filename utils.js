@@ -48,7 +48,7 @@ function createLog(name) {
     new Winston.transports.File({ filename: `logs/${name}.log`  })
   ];
 
-  transports.push( new Winston.transports.Console() );
+  // transports.push( new Winston.transports.Console() );
 
   const Log = Winston.createLogger({
     level: Config.LOG_LEVEL || 'debug',
@@ -95,6 +95,7 @@ let FOLDERS = [
     "Scope": "movies",
     "Path": "movies",
     "Schedule": "0 0 0 * * *",
+    "lastScan-": 0,
     "lastScan": 0,
     "Scraper": "movie",
     "Mime": "video"
@@ -136,7 +137,7 @@ let FOLDERS = [
     "Path": "videos",
     "Schedule": "0 0 0 * * *",
     "lastScan": 0,
-    "Scraper": false,
+    "Scraper": true,
     "Mime": "video"
   },
   {

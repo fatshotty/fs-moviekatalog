@@ -8,6 +8,10 @@ const SXXEYY_REGEXP = /S\d{2}E(\d{2,3})(?:-E(\d{2,3}))?/;
 
 class UpdateEntry extends Job {
 
+  get JobName() {
+    return `[${this.name}-updater]`;
+  }
+
   constructor(SCOPE) {
     super(SCOPE);
 

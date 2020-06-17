@@ -9,6 +9,11 @@ const SCRAPERS = ['TMDB', 'TVDB'];
 
 class Scraper extends Job {
 
+
+  get JobName() {
+    return `[${this.name}-scraper]`;
+  }
+
   constructor(SCOPE) {
     super(SCOPE);
 
@@ -16,8 +21,8 @@ class Scraper extends Job {
 
     this.FileContent = [];
 
-    if ( FS.existsSync(Path.join(Config.DATADIR, `${this.name}.txt`)) ) {
-      let filecontent = FS.readFileSync( Path.join(Config.DATADIR, `${this.name}.txt`), {encoding:'utf-8'}  )
+    if ( FS.existsSync(Path.join(Config.DATADIR, `${this.name}-scraper.txt`)) ) {
+      let filecontent = FS.readFileSync( Path.join(Config.DATADIR, `${this.name}-scraper.txt`), {encoding:'utf-8'}  )
       filecontent = filecontent.split('\n');
       this.FileContent = filecontent.map( r => r && JSON.parse(r) ).filter( r => !!r );
 
@@ -253,7 +258,7 @@ class Scraper extends Job {
 
     this.FileContent.push(res);
 
-    let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}.txt`), 'a' );
+    let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}-scraper.txt`), 'a' );
     FS.writeSync(fd, JSON.stringify(res) + '\n' );
     FS.closeSync(fd);
   }

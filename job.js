@@ -30,12 +30,8 @@ class Job extends EventEmitter {
   next() {
     let data = this.queue.shift();
     if ( !data ) {
-      if ( this.HasError ) {
-        this.Log.warn(`${this.JobName} queue is completed with ERROR`);
-      } else {
-        this.emit('queue-empty');
-        this.Log.info(`${this.JobName} queue is completed OK`);
-      }
+      // this.Log.info(`${this.JobName} queue is completed ${this.HasError ? 'NOT OK' : 'ok'}`);
+      this.emit('queue-empty');
       this.FREE = true;
       return;
     }
@@ -49,7 +45,12 @@ class Job extends EventEmitter {
 
   onError(err) {
     this.HasError = true;
-    this.Log.error(`${this.JobName} ERROR: ${err && err.message}`);
+    this.Log.error(`${this.JobName} ERROR: ${err}`);
+    if ( err && err.stack) {
+      this.Log.error(`${this.JobName} ${JSON.stringify(err.stack, null, 2)}`);
+    } else {
+      console.trace();
+    }
     this.next();
   }
 

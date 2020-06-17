@@ -10,6 +10,11 @@ const SXXEYY_REGEXP = /S\d{2}E(\d{2,3})(?:-E(\d{2,3}))?/;
 
 class CreateEntry extends Job {
 
+
+  get JobName() {
+    return `[${this.name}-creater]`;
+  }
+
   constructor(SCOPE) {
     super(SCOPE);
 
@@ -40,7 +45,7 @@ class CreateEntry extends Job {
       return this.MovieKatalog.create( newEntry ).then( (createdEntry) => {
         this.Log.info(`${this.JobName} entry created ${createdEntry.Name} (${createdEntry.Year}) - ${createdEntry.ID}`);
       }).catch( (e) => {
-        this.Log.error(`${this.JobName} entry ${fs.title} (${fs.year}) cannot be created: ${e.message}`);
+        this.Log.error(`${this.JobName} entry ${fs.title} (${fs.year}) cannot be created: ${e.message || e}`);
 
         // catch globally
         throw e;
@@ -165,7 +170,7 @@ class CreateEntry extends Job {
       videoCodec = details.shift();
 
     } catch(e) {
-      this.Log.error(`${this.JobName} ${full_filename} - ${e.message}` );
+      this.Log.info(`${this.JobName} - ${full_filename} - ${e.message}` );
     }
 
 
@@ -278,7 +283,7 @@ class CreateEntry extends Job {
             // let mf_path = `${MEDIA_ROOT_FOLDER}/${title} (${year})/${mediafile}`;
             res.Mediafiles.push(  this.computeMovieData(mediafileobj, res.Mediafiles.length)  );
           } else {
-            this.Log.warn(`${this.JobName} manual association of: ${mediafileobj.name}`);
+            this.Log.info(`${this.JobName} manual association of: ${mediafileobj.name}`);
             let manual_eps = this.manualComputeEpisodes( [mediafileobj] );
             let manual_ep = manual_eps[0];
             if ( `e${manual_ep.Reorder}` in eps ) {
@@ -357,7 +362,7 @@ class CreateEntry extends Job {
       let is_episode_name = true;
 
       if ( !ep_nums || ep_nums.length == 0 ) {
-        this.Log.warn(`${this.JobName} manual compute episode number ${i} for ${basefilename}`);
+        this.Log.info(`${this.JobName} manual compute episode number ${i} for ${basefilename}`);
         ep_nums = [i+1];
         is_episode_name = false;
       }
