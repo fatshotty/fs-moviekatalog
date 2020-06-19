@@ -18,13 +18,6 @@ class DiffDB extends Job {
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
   }
 
-  onError(err) {
-    this.HasError = true;
-    this.Log.error(`${this.JobName} ERROR: ${err && err.message}`);
-    this.next();
-  }
-
-
   execute(jsonRow) {
     let title = jsonRow.title;
     let year = jsonRow.year;
