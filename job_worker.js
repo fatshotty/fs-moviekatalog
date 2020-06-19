@@ -70,6 +70,10 @@ class Executor {
       this.removeEntry.addToQueue( filepath );
     });
 
+    this.parseRootFs.on('filerenamed', (jsonRow) => {
+      process.nextTick( () => this.diffdb.addToQueue(jsonRow) );
+    });
+
     this.parsesubfoldersfs.on('entry', (jsonRow) => {
       process.nextTick( () => this.diffdb.addToQueue(jsonRow) );
     })
@@ -110,9 +114,11 @@ class Executor {
     let ts = this.parsesubfoldersfs.LastScan;
     this._scope.lastScan = ts;
 
-    // this.parseRootFs.watch(  Path.join(Config.BASE_PATH, this._scope.Path)   );
+    this.parseRootFs.watch(  Path.join(Config.BASE_PATH, this._scope.Path)   );
 
-    Worker.parentPort.postMessage({action: 'update-ts', timestamp: ts});
+    if ( Config.USE_THREAD ) {
+      Worker.parentPort.postMessage({action: 'update-ts', timestamp: ts});
+    }
 
     this.execute();
   }

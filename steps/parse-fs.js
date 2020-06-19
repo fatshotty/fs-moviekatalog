@@ -72,16 +72,26 @@ class ParseRootFS extends Job {
   }
 
 
-  watch(basepath) {
+  watch(basepath, force) {
     let p = Promise.resolve();
     if ( this.Watcher ) {
-      p = this.Watcher.close().then( () => {
-        this.Log.info(`${this.JobName} watcher has been stopped`);
-      });
+      if ( force ) {
+        p = this.Watcher.close().then( () => {
+          this.Log.info(`${this.JobName} watcher has been stopped`);
+          this.Watcher = null;
+        });
+      } else {
+        this.Log.info(`watcher is already running and will not be stopped`);
+      }
     }
 
     p.then( () => {
-      this.Log.warn(`${this.JobName} *** restart watcher on ${this._scope.Path}`);
+      this.Log.warn(`${this.JobName} *** start watcher on ${this._scope.Path}`);
+
+      if ( this.Watcher ) {
+        this.Log.warn(`${this.JobName} watcher already running. SKIP`);
+        return;
+      }
 
       this.Watcher = Chokidar.watch( basepath , {
         persistent: true,
@@ -116,6 +126,7 @@ class ParseRootFS extends Job {
                 DATA = {};
                 for ( let v of values ) {
                   this.parseSubfoldersFS.computeObject( v );
+                  this.emit('filerenamed', v);
                 }
               }, 60 * 1000); // 10secs
 
@@ -221,14 +232,14 @@ class ParseRootFS extends Job {
       }
       subfolder.mediafiles.push({
         name: parsed.base,
-        file: Path.join('/', Path.relative( Path.join(folder, '../'), filepath ) ),
+        file: Path.join('/', Path.relative( Path.join(basepath, '../'), filepath ) ),
         size: stat.size,
         ts: stat.mtimeMs
       });
     } else {
       res.mediafiles.push({
         name: parsed.base,
-        file: Path.join('/', Path.relative( Path.join(folder, '../'), filepath ) ),
+        file: Path.join('/', Path.relative( Path.join(basepath, '../'), filepath ) ),
         size: stat.size,
         ts: stat.mtimeMs
       });
