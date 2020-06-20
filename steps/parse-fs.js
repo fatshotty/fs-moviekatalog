@@ -72,14 +72,22 @@ class ParseRootFS extends Job {
   }
 
 
+  unwatch() {
+    if ( this.Watcher ) {
+      return this.Watcher.close().then( () => {
+        this.Log.info(`${this.JobName} watcher has been stopped`);
+        this.Watcher = null;
+      });
+    }
+    return Promise.resolve();
+  }
+
+
   watch(basepath, force) {
     let p = Promise.resolve();
     if ( this.Watcher ) {
       if ( force ) {
-        p = this.Watcher.close().then( () => {
-          this.Log.info(`${this.JobName} watcher has been stopped`);
-          this.Watcher = null;
-        });
+        p = this.unwatch();
       } else {
         this.Log.info(`watcher is already running and will not be stopped`);
       }
@@ -135,6 +143,12 @@ class ParseRootFS extends Job {
             }
           })
           .on('unlink', (path) => {
+
+            if ( ! FS.existsSync(basepath) ) {
+              this.Log.warn(`${this.JobName} FODLER COULD BE UNMOUTED: ${basepath}`);
+              return this.unwatch();
+            }
+
             let relativePath = Path.join('/', Path.relative( Path.join(basepath, '../'), path ) )
             this.Log.info(`${this.JobName} watcher - file has been removed: ${relativePath}`);
 
