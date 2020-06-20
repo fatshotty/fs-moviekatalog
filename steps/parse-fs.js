@@ -77,9 +77,32 @@ class ParseRootFS extends Job {
       return this.Watcher.close().then( () => {
         this.Log.info(`${this.JobName} watcher has been stopped`);
         this.Watcher = null;
+      }).catch( (e) => {
+        this.Log.error(`${this.JobName} error while unwatching: ${err}`);
       });
     }
     return Promise.resolve();
+  }
+
+  checkWatch(basepath, force) {
+    let self = this;
+
+    function check() {
+
+      if ( FS.existsSync(basepath) ) {
+
+        self.watch(basepath, force);
+        return;
+
+      }
+
+      self.Log.warn(`${self.JobName} still not mounted: ${basepath}`);
+
+      setTimeout( check, 10 * 1000 );
+
+    }
+
+    check();
   }
 
 
@@ -146,7 +169,10 @@ class ParseRootFS extends Job {
 
             if ( ! FS.existsSync(basepath) ) {
               this.Log.warn(`${this.JobName} FODLER COULD BE UNMOUTED: ${basepath}`);
-              return this.unwatch();
+              this.unwatch().then( () => {
+                this.checkWatch(basepath, force);
+              });
+              return;
             }
 
             let relativePath = Path.join('/', Path.relative( Path.join(basepath, '../'), path ) )
