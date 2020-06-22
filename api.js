@@ -5,7 +5,7 @@ const {Config} = require('./utils');
 
 function createHeaders(method, path) {
 
-  const options = Object.assing({}, {
+  const options = Object.assign({}, {
     hostname: Config.HOSTNAME,
     port: Config.PORT,
     headers: {
