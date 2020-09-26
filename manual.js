@@ -13,7 +13,7 @@ const Log = createLog();
 const FOLDER = process.argv[2]
 
 if ( !FOLDER ) {
-  throw new Error(`Specify folder. eg: /mnt/shared/fusemount/redprimerose/media/movies`);
+  throw new Error(`Specify folder. eg: /mnt/shared/fusemount/redprimerose/media/movies/Joker (2019)`);
 }
 
 let relative = Path.relative( Config.BASE_PATH, FOLDER );

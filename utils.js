@@ -112,6 +112,16 @@ let FOLDERS = [
   },
   {
     "Enabled": true,
+    "Name": "tvprograms",
+    "Scope": "tvprograms",
+    "Path": "tvprograms",
+    "Schedule": "0 0 0 * * *",
+    "lastScan": 0,
+    "Scraper": "tv",
+    "Mime": "video"
+  },
+  {
+    "Enabled": true,
     "Name": "docu-movie",
     "Scope": "documentaries",
     "Path": "documentaries-movies",

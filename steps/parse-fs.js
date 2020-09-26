@@ -421,7 +421,7 @@ class ParseSubfoldersFS extends Job {
 
     }
 
-    res = Object.assign(res, {mediafiles, subfolders});
+    Object.assign(res, {mediafiles, subfolders});
 
     return has_been_updated;
 
