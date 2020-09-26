@@ -45,6 +45,7 @@ class Job extends EventEmitter {
 
   onError(err) {
     this.HasError = true;
+    console.error(err);
     this.Log.error(`${this.JobName} ERROR: ${JSON.stringify(err)}`);
     if ( err && err.stack) {
       this.Log.error(`${this.JobName} ${JSON.stringify(err.stack, null, 2)}`);

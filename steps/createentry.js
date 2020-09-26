@@ -443,6 +443,15 @@ class CreateEntry extends Job {
                 newMediafile.Reorder = savedEpisode.Mediafiles.length;
                 savedEpisode.Mediafiles.push(newMediafile);
                 shouldBeUpdate = true;
+              } else {
+                if ( savedMediafile.Url != newMediafile.Url ) {
+                  savedMediafile.Url = newMediafile.Url;
+                  shouldBeUpdate = true;
+                }
+                if ( String(savedMediafile.Hidden) != String(newMediafile.Hidden) ) {
+                  savedMediafile.Hidden = newMediafile.Hidden;
+                  shouldBeUpdate = true;
+                }
               }
             }
 
