@@ -51,7 +51,7 @@ class JobWorker extends Job {
     this.Worker.on('error', (e) => {
       Log.error(`${this.JobName} Worker - ERROR ${e.message}`);
       console.error(`${this.JobName} Worker - ERROR ${e.message}`, e);
-      TelegramBot.publish(this.JobName, e );
+      TelegramBot.publish(`${this.JobName} worker error`, e );
     });
   }
 
@@ -67,6 +67,7 @@ class JobWorker extends Job {
     } catch( e ) {
       Log.error(`${this.JobName} cannot postMessage to worker - ${e.message}`);
       console.error(`${this.JobName} - cannot send to thread: ${e.message}`, e);
+      TelegramBot.publish(`${this.JobName} sending message`, e );
     }
 
     return Promise.resolve();
