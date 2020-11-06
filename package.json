@@ -16,6 +16,7 @@
     "mime": "2.4.4",
     "node-tvdb": "4.1.0",
     "tmdb": "2.5.0",
-    "winston": "3.2.1"
+    "winston": "3.2.1",
+    "slimbot": "^4.7.0"
   }
 }

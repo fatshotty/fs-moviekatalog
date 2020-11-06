@@ -1,4 +1,5 @@
 const {Config, createLog, saveConfig} = require('./utils');
+const TelegramBot = require('./telegram-bot');
 const Job = require('./job');
 const {Worker} = require('worker_threads');
 
@@ -37,6 +38,7 @@ class JobWorker extends Job {
       Log.warn(`${this.JobName} - Worker is exited: ${code}`);
       // this.spawnThread();
       // TODO: send message to Telegram BOT
+      TelegramBot.publish(this.JobName, new Error('exited!') );
     });
     this.Worker.on('message', (data) => {
       Log.info(`${this.JobName} Worker - received data ${data.action}`);
@@ -49,6 +51,7 @@ class JobWorker extends Job {
     this.Worker.on('error', (e) => {
       Log.error(`${this.JobName} Worker - ERROR ${e.message}`);
       console.error(`${this.JobName} Worker - ERROR ${e.message}`, e);
+      TelegramBot.publish(this.JobName, e );
     });
   }
 

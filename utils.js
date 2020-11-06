@@ -23,6 +23,9 @@ const Config = {
   IMDB_API_KEY: process.env.IMDB_API_KEY,
   TVDB_API_KEY: process.env.TVDB_API_KEY,
 
+  TELEGRAM_LOG_BOT_ID: process.env.TELEGRAM_LOG_BOT_ID,
+  TELEGRAM_LOG_CHAT_ID: process.env.TELEGRAM_LOG_CHAT_ID,
+
   USER_UUID: process.env.USER_UUID,
   CATALOG_UUID: process.env.CATALOG_UUID,
   ApiUUID: process.env.ApiUUID,
