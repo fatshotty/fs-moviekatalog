@@ -24,10 +24,12 @@ process.on('uncaughtException', (err, origin) => {
 });
 
 
-function startProcess(scopeName) {
+function startProcess(scopeName, immediate) {
   let _scope = Config.Folders.find( s => s.Name == scopeName );
   let ex = new Executor(_scope);
-  ex.execute();
+  if (immediate || Config.IMMEDIATE) {
+    ex.execute();
+  }
 }
 
 
@@ -35,6 +37,9 @@ class Executor {
 
   constructor(SCOPE) {
     this._scope = SCOPE;
+
+
+    this._first_time = true;
 
     this.parseRootFs = new ParseRootFS(SCOPE);
     this.parsesubfoldersfs = new ParseSubfoldersFS(SCOPE);
@@ -111,14 +116,20 @@ class Executor {
   _execute() {
     this.Log.warn(`[${this._scope.Name}] *** executing next tick on ${ new Date() } ***`)
 
-    let ts = this.parsesubfoldersfs.LastScan;
-    this._scope.lastScan = ts;
+    if ( ! this._first_time ) {
+      this.Log.warn(`[${this._scope.Name}] second time: start watching and notifing update-ts`);
 
-    this.parseRootFs.watch(  Path.join(Config.BASE_PATH, this._scope.Path)   );
+      let ts = this.parsesubfoldersfs.LastScan;
+      this._scope.lastScan = ts;
 
-    if ( Config.USE_THREAD ) {
-      Worker.parentPort.postMessage({action: 'update-ts', timestamp: ts});
+      this.parseRootFs.watch(  Path.join(Config.BASE_PATH, this._scope.Path)   );
+
+      if ( Config.USE_THREAD ) {
+        Worker.parentPort.postMessage({action: 'update-ts', timestamp: ts});
+      }
     }
+
+    this._first_time = false;
 
     this.execute();
   }
