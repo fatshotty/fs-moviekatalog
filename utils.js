@@ -34,7 +34,9 @@ const Config = {
   HOSTNAME: process.env.HOSTNAME,
   PORT: process.env.PORT,
 
-  USE_THREAD: true
+  USE_THREAD: true,
+
+  IMMEDIATE: String(process.env.IMMEDIATE) == 'true'
 
 };
 
