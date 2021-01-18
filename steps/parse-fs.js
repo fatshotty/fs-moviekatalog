@@ -7,7 +7,6 @@ const ReadLine = require('readline');
 const Chokidar = require('chokidar');
 
 
-
 class ParseRootFS extends Job {
 
   get JobName() {
@@ -107,6 +106,12 @@ class ParseRootFS extends Job {
 
 
   watch(basepath, force) {
+
+    if ( ! Config.WATCHER ) {
+      this.Log.warn(`${self.JobName} HAS DISABLE WATCHING: ${basepath}`);
+      return;
+    }
+
     let p = Promise.resolve();
     if ( this.Watcher ) {
       if ( force ) {

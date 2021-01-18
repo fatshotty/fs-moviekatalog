@@ -17,6 +17,7 @@
     "node-tvdb": "4.1.0",
     "tmdb": "2.5.0",
     "winston": "3.2.1",
-    "slimbot": "^4.7.0"
+    "slimbot": "^4.7.0",
+    "mongoose": "5.9.18"
   }
 }

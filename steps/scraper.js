@@ -4,6 +4,7 @@ const ScraperLib = require('../scraper/scraper');
 const MovieKatalog = require('../moviekatalog');
 const FS = require('fs');
 const Path = require('path');
+const Entities = require('../models/entities');
 
 const SCRAPERS = ['TMDB', 'TVDB'];
 
@@ -19,24 +20,14 @@ class Scraper extends Job {
 
     this.MovieKatalog = new MovieKatalog(SCOPE.Scope, Config.USER_UUID, Config.CATALOG_UUID, Config.ApiKey);
 
-    this.FileContent = [];
-
-    if ( FS.existsSync(Path.join(Config.DATADIR, `${this.name}-scraper.txt`)) ) {
-      let filecontent = FS.readFileSync( Path.join(Config.DATADIR, `${this.name}-scraper.txt`), {encoding:'utf-8'}  )
-      filecontent = filecontent.split('\n');
-      this.FileContent = filecontent.map( r => r && JSON.parse(r) ).filter( r => !!r );
-
-      this.Log.warn(`${this.JobName} CACHE FILE HAS BEEN LOADED - ${this.FileContent.length}`);
-    }
+    this.Model = Entities[ this.name ];
 
   }
 
 
-  searchInCache(data) {
+  async searchInCache(data) {
 
-    return this.FileContent.find( (r) => {
-      return r.fs.title.toLowerCase() == data.title.toLowerCase()  &&  r.fs.year == data.year;
-    });
+    return await this.Model.findByTitleAndYear(data.title, data.year);
 
   }
 
@@ -80,7 +71,7 @@ class Scraper extends Job {
 
       this.Log.info(`${this.JobName} scraping ${title} (${year}) via ${scraper}`);
 
-      let cached = this.searchInCache(data.fs);
+      let cached = await this.searchInCache(data.fs);
 
       let tmdbid = null;
 
@@ -114,8 +105,8 @@ class Scraper extends Job {
 
       } else {
 
-        this.Log.info(`${this.JobName} - ${title} (${year})  found in cache -> ${cached.scraped.Id}`);
-        tmdbid = cached.scraped.Id;
+        this.Log.info(`${this.JobName} - ${title} (${year})  found in cache -> ${cached.OfficialID}`);
+        tmdbid = cached.OfficialID;
 
       }
 
@@ -123,12 +114,14 @@ class Scraper extends Job {
       if ( tmdbid ) {
         let objScraped = null;
 
-        if ( !cached ) {
-          let klass = await ScraperLib[ scraper ].getInfo(tmdbid, type)
-          objScraped = klass.toPage();
-        } else {
-          objScraped = cached.scraped;
-        }
+        let klass = await ScraperLib[ scraper ].getInfo(tmdbid, type, cached ? cached.ImdbID : null)
+        objScraped = klass.toPage();
+
+        // if ( !cached ) {
+
+        // } else {
+        //   objScraped = cached.scraped;
+        // }
 
         let entry = data.entry;
         if ( !entry ) {
@@ -147,7 +140,7 @@ class Scraper extends Job {
 
         if ( !cached ) {
           // write in cache
-          this.writeFile( {scraped: objScraped, fs: { title: data.fs.title, year: data.fs.year} } );
+          this.writeFile( {scraped: objScraped, fs: { title: data.fs.title, year: data.fs.year} }, cached );
         }
 
         // finish
@@ -254,13 +247,24 @@ class Scraper extends Job {
   // }
 
 
-  writeFile(res) {
+  async writeFile(res, model) {
 
-    this.FileContent.push(res);
+    // this.FileContent.push(res);
 
-    let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}-scraper.txt`), 'a' );
-    FS.writeSync(fd, JSON.stringify(res) + '\n' );
-    FS.closeSync(fd);
+    // let fd = FS.openSync( Path.join(Config.DATADIR, `${this.name}-scraper.txt`), 'a' );
+    // FS.writeSync(fd, JSON.stringify(res) + '\n' );
+    // FS.closeSync(fd);
+    model = model || new this.Model();
+    model.Title = res.scraped.Title;
+    model.Year = res.scraped.Year;
+    model.OfficialID = String(res.scraped.Id);
+    model.ImdbID = res.scraped.ImdbData ? res.scraped.ImdbData.imdbid : null;
+    model.FSTree = res.fs;
+    model.tvshow = this._scope.Scraper == 'tv';
+    model.movie = this._scope.Scraper == 'movie';
+
+    return model.save();
+
   }
 
 }

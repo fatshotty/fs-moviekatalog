@@ -31,10 +31,14 @@ const Config = {
   ApiUUID: process.env.ApiUUID,
   ApiKey: process.env.ApiKey,
 
+  DATABASE: process.env.DATABASE,
+
   HOSTNAME: process.env.HOSTNAME,
   PORT: process.env.PORT,
 
-  USE_THREAD: true,
+  USE_THREAD: false,
+
+  USE_WATCHER: String(process.env.WATCHER) == 'true',
 
   IMMEDIATE: String(process.env.IMMEDIATE) == 'true'
 
@@ -72,11 +76,15 @@ function createLog(name) {
     let _old_warn = Log.warn;
     let _old_error = Log.error;
     Log.warn = function() {
-      LOGGER.process.warn.apply(LOGGER.process, arguments);
+      if ( LOGGER.process ) {
+        LOGGER.process.warn.apply(LOGGER.process, arguments);
+      }
       return _old_warn.apply(Log, arguments);
     };
     Log.error = function() {
-      LOGGER.process.error.apply(LOGGER.process, arguments);
+      if ( LOGGER.process ) {
+        LOGGER.process.error.apply(LOGGER.process, arguments);
+      }
       return _old_error.apply(Log, arguments);
     };
   }

@@ -9,3 +9,5 @@ data/
 test.js
 
 .DS_Store
+data copy
+dump-mongo.zip

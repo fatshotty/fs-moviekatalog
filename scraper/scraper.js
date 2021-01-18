@@ -60,10 +60,10 @@ function getInfo(id, type = 'movie') {
 
 
 function wrapInfo(engine) {
-  return function(id, type='movie') {
+  return function(id, type='movie', originalImdbID) {
     let args = Array.prototype.slice.call(arguments, 0);
     return engine.getInfo.apply(engine, args).then( (data) => {
-      let imdbid = data.imdbId;
+      let imdbid = originalImdbID || data.imdbId;
 
       let p = Promise.resolve( data );
 
