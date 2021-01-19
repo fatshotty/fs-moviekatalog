@@ -56,10 +56,19 @@ async function portingDB() {
     // Note: we use the crlfDelay option to recognize all instances of CR LF
     // ('\r\n') in input.txt as a single line break.
 
+    let Ent = Models[FILE];
+
     for await (const line of rl) {
       // Each line in input.txt will be successively available here as `line`.
       let data = JSON.parse(line);
       let model = new Models[FILE];
+
+      let res = await Ent.findByTitleAndYear(data.Title, data.Year);
+      if ( res ) {
+        console.log(FILE, data.Title, data.Year, 'already exists');
+        continue;
+      }
+
       model.Title = data.Title;
       model.Year = data.Year;
       model.OfficialID = String(data.OfficialID);
@@ -72,6 +81,8 @@ async function portingDB() {
     }
 
   }
+
+  console.log('DONE');
 }
 
 
