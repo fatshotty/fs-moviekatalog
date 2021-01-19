@@ -17,7 +17,7 @@ function createEntity(scopeLibrary) {
 
   let FileContent;
 
-  if ( FS.existsSync(Path.join(Config.DATADIR, `${scopeLibrary}-scraper.txt`)) ) {
+  if ( !USE_DB && FS.existsSync(Path.join(Config.DATADIR, `${scopeLibrary}-scraper.txt`)) ) {
     let filecontent = FS.readFileSync( Path.join(Config.DATADIR, `${scopeLibrary}-scraper.txt`), {encoding:'utf-8'}  )
     filecontent = filecontent.split('\n');
     FileContent = filecontent.map( (r) => {
