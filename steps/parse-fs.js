@@ -108,7 +108,7 @@ class ParseRootFS extends Job {
   watch(basepath, force) {
 
     if ( ! Config.WATCHER ) {
-      this.Log.warn(`${self.JobName} HAS DISABLE WATCHING: ${basepath}`);
+      this.Log.warn(`${this.JobName} HAS DISABLE WATCHING: ${basepath}`);
       return;
     }
 
