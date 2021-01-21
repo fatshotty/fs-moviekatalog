@@ -7,6 +7,8 @@ const Path = require('path');
 const SEASON_NUM_REGEXP = /S\w+\s(\d+)$/i;
 const SXXEYY_REGEXP = /S\d{2}E(\d{2,3})(?:-E(\d{2,3}))?/;
 
+const TMDB_PLACEHOLDER = 'id-';
+
 
 class CreateEntry extends Job {
 
@@ -64,7 +66,9 @@ class CreateEntry extends Job {
 
       this.Log.info(`${this.JobName} ${fs.title} (${fs.year}) - will be updated!`);
 
-      return this.MovieKatalog.update( entry ).then( (createdEntry) => {
+      newEntry.ID = entry.ID;
+
+      return this.MovieKatalog.update( newEntry ).then( (createdEntry) => {
         this.Log.info(`${this.JobName} entry updated ${createdEntry.Name} (${createdEntry.Year}) - ${createdEntry.ID}`);
       }).catch( (e) => {
         this.Log.error(`${this.JobName} entry ${fs.title} (${fs.year}) cannot be updated: ${e.message}`);
@@ -101,7 +105,7 @@ class CreateEntry extends Job {
 
     let res = {
       Name: scraped.Title || fs.title,
-      TmdbId: `${scraped.Id || 'id-' + Date.now()}`,
+      TmdbId: `${scraped.Id || TMDB_PLACEHOLDER + Date.now()}`,
       ImdbId: scraped.ImdbData ? scraped.ImdbData.imdbid : undefined,
       Genres: genres,
       Year: year,
@@ -470,6 +474,10 @@ class CreateEntry extends Job {
     }
 
 
+    if (savedEntry.TmdbId.startsWith(TMDB_PLACEHOLDER) ) {
+      // force save new scraper data
+      shouldBeUpdate = true;
+    }
 
     return shouldBeUpdate;
   }
