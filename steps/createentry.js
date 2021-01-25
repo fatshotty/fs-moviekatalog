@@ -419,6 +419,11 @@ class CreateEntry extends Job {
           shouldBeUpdate = true;
         }
 
+        if ( (savedMediafile.Url ||'').toLowerCase() != (newMediafile.Url.toLowerCase() || '') )  {
+          savedMediafile.Url = newMediafile.Url;
+          shouldBeUpdate = true;
+        }
+
       } else {
         newMediafile.Reorder = savedEntry.Mediafiles.length;
         savedEntry.Mediafiles.push(newMediafile);
