@@ -4,6 +4,7 @@ const ScraperLib = require('../scraper/scraper');
 const MovieKatalog = require('../moviekatalog');
 const FS = require('fs');
 const Path = require('path');
+const Moment = require('moment');
 const Entities = require('../models/entities');
 
 const SCRAPERS = ['TMDB', 'TVDB'];
@@ -112,10 +113,16 @@ class Scraper extends Job {
 
 
       if ( tmdbid ) {
-        let objScraped = null;
 
-        let klass = await ScraperLib[ scraper ].getInfo(tmdbid, type, cached ? cached.ImdbID : null)
-        objScraped = klass.toPage();
+        let objScraped = null;
+        if ( cached ) {
+          objScraped = this.getScrapedJson(cached);
+        }
+
+        if ( !objScraped ) {
+          let klass = await ScraperLib[ scraper ].getInfo(tmdbid, type, cached ? cached.ImdbID : null)
+          objScraped = klass.toPage();
+        }
 
         // if ( !cached ) {
 
@@ -138,7 +145,7 @@ class Scraper extends Job {
           this.emit( 'update', {scraped: objScraped, ...data} );
         }
 
-        if ( !cached ) {
+        if ( !cached || this.isCachedExpired(cached) ) {
           // write in cache
           this.writeFile( {scraped: objScraped, fs: { title: data.fs.title, year: data.fs.year} }, cached );
         }
@@ -247,6 +254,39 @@ class Scraper extends Job {
   // }
 
 
+  getScrapedJson(model) {
+    let obj = null;
+    try {
+      obj = JSON.parse(model.ScrapedJson);
+    } catch(e) {
+
+    }
+
+    if ( !obj ) {
+      return null;
+    }
+
+    if ( this.isCachedExpired(model) ) {
+      return null;
+    }
+
+    return obj;
+
+  }
+
+  isCachedExpired(model) {
+    // check dates
+    let updatedAt = Moment(model.updated_at);
+    let today = Moment();
+
+    if ( Math.abs( today.diff(updatedAt, 'days') ) >= 7  ) {
+      return true;
+    }
+
+    return false;
+
+  }
+
   async writeFile(res, model) {
 
     // this.FileContent.push(res);
@@ -260,8 +300,13 @@ class Scraper extends Job {
     model.OfficialID = String(res.scraped.Id);
     model.ImdbID = res.scraped.ImdbData ? res.scraped.ImdbData.imdbid : null;
     model.FSTree = res.fs;
-    model.tvshow = this._scope.Scraper == 'tv';
-    model.movie = this._scope.Scraper == 'movie';
+
+    model.tvshow = res.scraped.tvshow;
+    model.movie = res.scraped.movie;
+    model.season = res.scraped.season;
+    model.episode = res.scraped.episode;
+
+    model.ScrapedJson = JSON.stringify(res.scraped);
 
     return model.save();
 

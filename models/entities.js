@@ -1,6 +1,6 @@
 const CreateEntity = require('./entity');
 
-const FILES = ['docu-movie','docu-serie', 'movies', 'tvprograms', 'tvshows', 'videos', 'videoscoll'];
+const FILES = ['docu-movie','docu-serie', 'movies', 'tvprograms', 'tvshows', 'videos', 'videoscoll', 'cineteca'];
 
 const Models = {};
 for ( let key of FILES ) {

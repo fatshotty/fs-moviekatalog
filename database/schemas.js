@@ -23,6 +23,7 @@ const EntityS = new Schema({
   [EntityColumns.season]: {type: Boolean},
   [EntityColumns.episode]: {type: Boolean},
   [EntityColumns.FS]: {type: String},
+  [EntityColumns.ScrapedJson]: {type: String}
 
 }, TIMESTAMPS)
 

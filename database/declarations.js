@@ -9,6 +9,8 @@ const EntityColumns = {
   season: 'season',
   episode: 'episode',
 
+  ScrapedJson: 'scrapedJson',
+
   FS: 'fs'
 };
 
