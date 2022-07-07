@@ -19,6 +19,6 @@
     "winston": "3.2.1",
     "slimbot": "^4.7.0",
     "mongoose": "5.9.18",
-    "moment": "2.29.1"
+    "moment": "2.29.4"
   }
 }
